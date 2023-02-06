@@ -77,7 +77,7 @@ import           Servant.API
                  NoContentVerb, QueryFlag, QueryParam', QueryParams, Raw, RawM,
                  ReflectMethod (..), RemoteHost, ReqBody', SBoolI, Stream,
                  StreamBody', Summary, ToHttpApiData, ToSourceIO (..), Vault,
-                 Verb, WithNamedContext, WithStatus (..), contentType, getHeadersHList,
+                 Verb, WithNamedContext, WithResource, WithStatus (..), contentType, getHeadersHList,
                  getResponse, toEncodedUrlPiece, toUrlPiece, NamedRoutes)
 import           Servant.API.Generic
                  (GenericMode(..), ToServant, ToServantApi
@@ -786,6 +786,14 @@ instance HasClient m subapi =>
 
   hoistClientMonad pm _ f cl = hoistClientMonad pm (Proxy :: Proxy subapi) f cl
 
+instance HasClient m subapi =>
+  HasClient m (WithResource res :> subapi) where
+
+  type Client m (WithResource res :> subapi) = Client m subapi
+  clientWithRoute pm Proxy = clientWithRoute pm (Proxy :: Proxy subapi)
+
+  hoistClientMonad pm _ f cl = hoistClientMonad pm (Proxy :: Proxy subapi) f cl
+
 instance ( HasClient m api
          ) => HasClient m (AuthProtect tag :> api) where
   type Client m (AuthProtect tag :> api)
@@ -904,7 +912,7 @@ infixl 2 /:
 -- rootClient = client api
 --
 -- endpointClient :: ClientM Person
--- endpointClient = client // subApi // endpoint
+-- endpointClient = client \/\/ subApi \/\/ endpoint
 -- @
 (//) :: a -> (a -> b) -> b
 x // f = f x
@@ -937,10 +945,10 @@ x // f = f x
 -- rootClient = client api
 --
 -- hello :: String -> ClientM String
--- hello name = rootClient // hello /: name
+-- hello name = rootClient \/\/ hello \/: name
 --
 -- endpointClient :: ClientM Person
--- endpointClient = client // subApi /: "foobar123" // endpoint
+-- endpointClient = client \/\/ subApi \/: "foobar123" \/\/ endpoint
 -- @
 (/:) :: (a -> b -> c) -> b -> a -> c
 (/:) = flip

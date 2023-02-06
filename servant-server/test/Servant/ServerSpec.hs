@@ -23,6 +23,8 @@ import           Control.Monad.Error.Class
 import           Control.Monad.IO.Class (MonadIO(..))
 import           Data.Aeson
                  (FromJSON, ToJSON, decode', encode)
+import           Data.Acquire
+                 (Acquire, mkAcquire)
 import qualified Data.ByteString                   as BS
 import qualified Data.ByteString.Base64            as Base64
 import           Data.Char
@@ -83,8 +85,11 @@ import           Servant.Server.Internal.Context
 -- This declaration simply checks that all instances are in place.
 _ = serveWithContext comprehensiveAPI comprehensiveApiContext
 
-comprehensiveApiContext :: Context '[NamedContext "foo" '[]]
-comprehensiveApiContext = NamedContext EmptyContext :. EmptyContext
+comprehensiveApiContext :: Context '[NamedContext "foo" '[], Acquire Int]
+comprehensiveApiContext =
+  NamedContext EmptyContext :.
+  mkAcquire (pure 10) (\_ -> pure ()) :.
+  EmptyContext
 
 -- * Specs
 
